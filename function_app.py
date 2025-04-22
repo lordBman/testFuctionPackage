@@ -1,6 +1,12 @@
 import azure.functions as func
 import logging
 
+from cryptography.fernet import Fernet
+
+key = Fernet.generate_key()
+f = Fernet(key)
+token = f.encrypt(b"A really secret message. Not for prying eyes.")
+
 app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
 
 @app.route(route="mytrigger")
@@ -20,6 +26,6 @@ def mytrigger(req: func.HttpRequest) -> func.HttpResponse:
         return func.HttpResponse(f"Hello, {name}. This HTTP triggered function executed successfully.")
     else:
         return func.HttpResponse(
-             "This HTTP triggered function executed successfully. Pass a name in the query string or in the request body for a personalized response.",
+             f.decrypt(token) + "This HTTP triggered function executed successfully. Pass a name in the query string or in the request body for a personalized response.",
              status_code=200
         )
